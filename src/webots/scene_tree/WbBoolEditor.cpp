@@ -24,7 +24,11 @@
 
 WbBoolEditor::WbBoolEditor(QWidget *parent) : WbValueEditor(parent), mCheckBox(new QCheckBox(this)) {
   mCheckBox->setSizePolicy(QSizePolicy::Maximum, QSizePolicy::Maximum);
+#if QT_VERSION >= QT_VERSION_CHECK(6, 7, 0)
+  connect(mCheckBox, &QCheckBox::checkStateChanged, this, &WbBoolEditor::apply);
+#else
   connect(mCheckBox, &QCheckBox::stateChanged, this, &WbBoolEditor::apply);
+#endif
   mLayout->addWidget(mCheckBox, 1, 1);
 }
 
@@ -91,12 +95,12 @@ void WbBoolEditor::apply() {
   mBool = field()->hasRestrictedValues() ? mComboBox->currentText() == "TRUE" : mCheckBox->checkState();
 
   if (singleValue()) {
-    WbSFBool *const sfBool = static_cast<WbSFBool *>(singleValue());
+    const WbSFBool *const sfBool = static_cast<WbSFBool *>(singleValue());
     if (sfBool->value() == mBool)
       return;
     mPreviousValue->setBool(sfBool->value());
   } else if (multipleValue()) {
-    WbMFBool *const mfBool = static_cast<WbMFBool *>(multipleValue());
+    const WbMFBool *const mfBool = static_cast<WbMFBool *>(multipleValue());
     if (mfBool->item(index()) == mBool)
       return;
     mPreviousValue->setBool(mfBool->item(index()));

@@ -112,9 +112,8 @@ WbRenderingDeviceWindow::WbRenderingDeviceWindow(WbRenderingDevice *device) :
   mUpdateRequested(true),
   mShowOverlayOnClose(true) {
   setSurfaceType(QWindow::OpenGLSurface);
-  QSurfaceFormat surfaceFormat = format();
-  surfaceFormat.setMajorVersion(3);
-  surfaceFormat.setMinorVersion(3);
+  assert(cMainOpenGLContext);
+  QSurfaceFormat surfaceFormat = cMainOpenGLContext->format();
   setFormat(surfaceFormat);
 
   mAbstractCamera = dynamic_cast<WbAbstractCamera *>(mDevice);
@@ -167,7 +166,7 @@ WbRenderingDeviceWindow::~WbRenderingDeviceWindow() {
     return;
   QOpenGLFunctions_3_3_Core *f = QOpenGLVersionFunctionsFactory::get<QOpenGLFunctions_3_3_Core>(mContext);
   f->glDeleteVertexArrays(1, &mVaoId);
-  f->glDeleteBuffers(2, (GLuint *)&mVboId);
+  f->glDeleteBuffers(2, reinterpret_cast<GLuint *>(&mVboId));
   mContext->doneCurrent();
   delete mVboId;
 }
@@ -303,7 +302,7 @@ void WbRenderingDeviceWindow::renderNow() {
 
   if (!mContext) {
     mContext = new QOpenGLContext(this);
-    mContext->setFormat(requestedFormat());
+    mContext->setFormat(cMainOpenGLContext->format());
     mContext->setShareContext(cMainOpenGLContext);
     mContext->create();
   }

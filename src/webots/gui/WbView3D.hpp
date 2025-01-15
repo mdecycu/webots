@@ -55,7 +55,7 @@ class WbView3D : public WbWrenWindow {
 
 public:
   explicit WbView3D();
-  virtual ~WbView3D();
+  virtual ~WbView3D() override;
 
   void setParentWidget(QWidget *widget) { mParentWidget = widget; }
 
@@ -97,7 +97,7 @@ public slots:
 
 protected slots:
   // cppcheck-suppress virtualCallInConstructor
-  void renderNow(bool culling = true) override;
+  void renderNow(bool culling = true, bool offScreen = false) override;
 
 protected:
   void initialize() override;

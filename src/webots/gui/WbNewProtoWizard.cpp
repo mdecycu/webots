@@ -293,6 +293,7 @@ QWizardPage *WbNewProtoWizard::createIntroPage() {
   page->setTitle(tr("New PROTO creation"));
 
   QVBoxLayout *layout = new QVBoxLayout(page);
+  // cppcheck-suppress constVariablePointer
   QLabel *label = new QLabel(tr("This wizard will help you creating a new PROTO."), page);
   layout->addWidget(label);
 
@@ -489,7 +490,7 @@ void WbNewProtoWizard::updateBaseNode() {
   QStringList fieldNames;
   mCategory = topLevel->type();
   if (mCategory == WbProtoManager::BASE_NODE) {
-    WbNodeModel *nodeModel = WbNodeModel::findModel(mBaseNode);
+    const WbNodeModel *nodeModel = WbNodeModel::findModel(mBaseNode);
     fieldNames = nodeModel->fieldNames();
     mIsProtoNode = false;
   } else {
@@ -514,7 +515,11 @@ void WbNewProtoWizard::updateBaseNode() {
     selectAll->setText(tr("select all"));
     mExposedFieldCheckBoxes.push_back(selectAll);
     layout->addWidget(selectAll);
+#if QT_VERSION >= QT_VERSION_CHECK(6, 7, 0)
+    connect(selectAll, &QCheckBox::checkStateChanged, this, &WbNewProtoWizard::updateCheckBox);
+#else
     connect(selectAll, &QCheckBox::stateChanged, this, &WbNewProtoWizard::updateCheckBox);
+#endif
 
     foreach (const QString &name, fieldNames) {
       mExposedFieldCheckBoxes.push_back(new QCheckBox(name));

@@ -452,7 +452,7 @@ void WbWrenCamera::render() {
   else if (mType == 's')
     materialName = "segmentation";
   wr_scene_enable_depth_reset(wr_scene_get_instance(), false);
-  wr_scene_render_to_viewports(wr_scene_get_instance(), numActiveViewports, mViewportsToRender, materialName, true);
+  wr_scene_render_to_viewports(wr_scene_get_instance(), numActiveViewports, mViewportsToRender, materialName, true, false);
 
   if (!isPlanarProjection())
     applySphericalPostProcessingEffect();
@@ -664,10 +664,13 @@ void WbWrenCamera::cleanup() {
   }
 
   WrTextureRtt *renderingTexture = wr_frame_buffer_get_output_texture(mResultFrameBuffer, 0);
-  WrTextureRtt *outputTexture = wr_frame_buffer_get_output_texture(mResultFrameBuffer, 1);
-  wr_frame_buffer_delete(mResultFrameBuffer);
   wr_texture_delete(WR_TEXTURE(renderingTexture));
+  // For some reason, deleting the outputTexture when cleaning the world causes crash on macos when closing the app.
+#ifndef __APPLE__
+  WrTextureRtt *outputTexture = wr_frame_buffer_get_output_texture(mResultFrameBuffer, 1);
   wr_texture_delete(WR_TEXTURE(outputTexture));
+#endif
+  wr_frame_buffer_delete(mResultFrameBuffer);
 
   wr_texture_delete(WR_TEXTURE(mNoiseMaskTexture));
   mNoiseMaskTexture = NULL;
@@ -978,14 +981,6 @@ void WbWrenCamera::applySphericalPostProcessingEffect() {
   wr_shader_program_set_custom_uniform_value(WbWrenShaders::mergeSphericalShader(), "cylindrical",
                                              WR_SHADER_PROGRAM_UNIFORM_TYPE_BOOL,
                                              reinterpret_cast<const char *>(&isCylindrical));
-
-  wr_shader_program_set_custom_uniform_value(WbWrenShaders::mergeSphericalShader(), "subCamerasResolutionX",
-                                             WR_SHADER_PROGRAM_UNIFORM_TYPE_INT,
-                                             reinterpret_cast<const char *>(&mSubCamerasResolutionX));
-
-  wr_shader_program_set_custom_uniform_value(WbWrenShaders::mergeSphericalShader(), "subCamerasResolutionY",
-                                             WR_SHADER_PROGRAM_UNIFORM_TYPE_INT,
-                                             reinterpret_cast<const char *>(&mSubCamerasResolutionY));
 
   wr_shader_program_set_custom_uniform_value(WbWrenShaders::mergeSphericalShader(), "minRange",
                                              WR_SHADER_PROGRAM_UNIFORM_TYPE_FLOAT, reinterpret_cast<const char *>(&mMinRange));
